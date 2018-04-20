@@ -1,0 +1,5 @@
+recursive-include microscPSF *.md
+recursive-include microscPSF *.py
+recursive-include microscPSF *.txt
+
+
