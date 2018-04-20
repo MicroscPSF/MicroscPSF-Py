@@ -25,6 +25,7 @@ References:
 
 Hazen 04/18
 """
+import cmath
 import math
 import numpy
 import scipy
@@ -75,15 +76,16 @@ def deltaFocus(mp, zd):
     return a*a*(mp["zd0"] - zd)/(2.0*mp["zd0"]*zd)
 
 
-def gLZRFocalScan(mp, rv, zv, pz = 0.0, wvl = 0.6, zd = None):
+def gLZRFocalScan(mp, rv, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = None):
     """
-    Calculate radial G-L at specified radius and ti values. This is models the PSF
+    Calculate radial G-L at specified radius and z values. This is models the PSF
     you would measure by scanning the microscopes focus.
 
     mp - The microscope parameters dictionary.
     rv - A numpy array containing the radius values.
     zv - A numpy array containing the (relative) z offset values of the coverslip (negative is closer to the objective).
-    px - Particle z position above the coverslip (positive values only).
+    normalize - Normalize the PSF to unit height.
+    pz - Particle z position above the coverslip (positive values only).
     wvl - Light wavelength in microns.
     zd - Actual camera position in microns. If not specified the microscope tube length is used.
     """
@@ -93,7 +95,10 @@ def gLZRFocalScan(mp, rv, zv, pz = 0.0, wvl = 0.6, zd = None):
     [scaling_factor, max_rho] = configure(mp, wvl)
     rho = numpy.linspace(0.0, max_rho, rho_samples)
 
+    a = mp["NA"] * mp["zd0"] / math.sqrt(mp["M"]*mp["M"] + mp["NA"]*mp["NA"])  # Aperture radius at the back focal plane.
+    k = 2.0 * numpy.pi/wvl
     ti = zv.reshape(-1,1) + mp["ti0"]
+
     opdt = OPD(mp, rho, ti, pz, wvl, zd)
 
     # Sample the phase
@@ -110,7 +115,10 @@ def gLZRFocalScan(mp, rv, zv, pz = 0.0, wvl = 0.6, zd = None):
     # Note the matrix transposes to get the dimensions correct.    
     C, residuals, _, _ = numpy.linalg.lstsq(J.T, phase.T)
 
-    b = 2 * numpy.pi * rv.reshape(-1, 1) * mp["NA"] / wvl
+    rv = rv*mp["M"]
+    b = k * a * rv.reshape(-1, 1)/zd
+    
+    #b = 2 * numpy.pi * rv.reshape(-1, 1) * mp["NA"] / wvl
 
     # Convenience functions for J0 and J1 Bessel functions
     J0 = lambda x: scipy.special.jv(0, x)
@@ -126,7 +134,8 @@ def gLZRFocalScan(mp, rv, zv, pz = 0.0, wvl = 0.6, zd = None):
     PSF_rz = (numpy.abs(R.dot(C))**2).T
 
     # Normalize to the maximum value
-    PSF_rz /= numpy.max(PSF_rz)    
+    if normalize:
+        PSF_rz /= numpy.max(PSF_rz)    
 
     return PSF_rz
 
@@ -164,3 +173,69 @@ def OPD(mp, rho, ti, pz, wvl, zd):
     return k * (OPDs + OPDi + OPDg + OPDt)
 
 
+def slowGL(mp, max_rho, rv, zv, pz, wvl, zd):
+    """
+    Calculate a single point in the G-L PSF using integration. This
+    is primarily provided for testing / reference purposes. As the
+    function name implies, this is going to be slow.
+
+    mp - The microscope parameters dictionary.
+    max_rho - The maximum rho value.
+    rv - A radius value in microns.
+    zv - A z offset value (of the coverslip) in microns.
+    pz - Particle z position above the coverslip in microns.
+    wvl - Light wavelength in microns.
+    zd - Actual camera position in microns.
+    """
+    a = mp["NA"] * mp["zd0"] / math.sqrt(mp["M"]*mp["M"] + mp["NA"]*mp["NA"])  # Aperture radius at the back focal plane.
+    k = 2.0 * numpy.pi/wvl
+    ti = zv + mp["ti0"]
+
+    rv = rv*mp["M"]
+    
+    def integral_fn_imag(rho):
+        t1 = k * a * rho * rv/zd
+        t2 = scipy.special.jv(0, t1)
+        t3 = t2*cmath.exp(1j*OPD(mp, rho, ti, pz, wvl, zd))*rho
+        return t3.imag
+    
+    def integral_fn_real(rho):
+        t1 = k * a * rho * rv/zd
+        t2 = scipy.special.jv(0, t1)
+        t3 = t2*cmath.exp(1j*OPD(mp, rho, ti, pz, wvl, zd))*rho
+        return t3.real
+
+    int_i = scipy.integrate.quad(lambda x: integral_fn_imag(x), 0.0, max_rho)[0]
+    int_r = scipy.integrate.quad(lambda x: integral_fn_real(x), 0.0, max_rho)[0]
+
+    t1 = k * a * a / (zd * zd)
+    return t1 * (int_r * int_r + int_i * int_i)
+    
+
+def gLZRFocalScanSlow(mp, rv, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = None):
+    """
+    This is the integration version of gLZRFocalScan.
+
+    mp - The microscope parameters dictionary.
+    rv - A numpy array containing the radius values.
+    zv - A numpy array containing the (relative) z offset values of the coverslip (negative is closer to the objective).
+    normalize - Normalize the PSF to unit height.
+    pz - Particle z position above the coverslip (positive values only).
+    wvl - Light wavelength in microns.
+    zd - Actual camera position in microns. If not specified the microscope tube length is used.
+    """
+    if zd is None:
+        zd = mp["zd0"]
+
+    [scaling_factor, max_rho] = configure(mp, wvl)
+    rho = numpy.linspace(0.0, max_rho, rho_samples)
+
+    psf_rz = numpy.zeros((zv.size, rv.size))
+    for i in range(zv.size):
+        for j in range(rv.size):
+            psf_rz[i,j] = slowGL(mp, max_rho, rv[j], zv[i], pz, wvl, zd)
+
+    if normalize:
+        psf_rz = psf_rz/numpy.max(psf_rz)
+        
+    return psf_rz
