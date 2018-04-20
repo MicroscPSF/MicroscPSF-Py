@@ -76,6 +76,44 @@ def deltaFocus(mp, zd):
     return a*a*(mp["zd0"] - zd)/(2.0*mp["zd0"]*zd)
 
 
+def gLXYZFocalScan(mp, dxy, xy_size, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = None):
+    """
+    Calculate 3D G-L PSF. This is models the PSF you would measure by scanning the microscopes 
+    focus.
+
+    This will return a numpy array with of size (zv.size, xy_size, xy_size). Note that z
+    is the zeroth dimension of the PSF.
+
+    mp - The microscope parameters dictionary.
+    dxy - Step size in the XY plane.
+    xy_size - Number of pixels in X/Y.
+    zv - A numpy array containing the (relative) z offset values of the coverslip (negative is closer to the objective).
+    normalize - Normalize the PSF to unit height.
+    pz - Particle z position above the coverslip (positive values only).
+    wvl - Light wavelength in microns.
+    zd - Actual camera position in microns. If not specified the microscope tube length is used.
+    """
+    # Calculate rv vector, this is 2x up-sampled.
+    rv_max = dxy * math.sqrt(0.5 * xy_size * xy_size) + dxy
+    rv = numpy.arange(0.0, rv_max + 0.5*dxy, dxy)
+    
+    # Calculate radial/Z PSF.
+    PSF_rz = gLZRFocalScan(mp, rv, zv, normalize = normalize, pz = pz, wvl = wvl, zd = zd)
+
+    # Create XY grid of radius values.
+    c_xy = float(xy_size) * 0.5
+    xy = numpy.mgrid[0:xy_size, 0:xy_size] + 0.5
+    r_pixel = dxy * numpy.sqrt((xy[1] - c_xy) * (xy[1] - c_xy) + (xy[0] - c_xy) * (xy[0] - c_xy))
+
+    # Create XYZ PSF by interpolation.
+    PSF_xyz = numpy.zeros((zv.size, xy_size, xy_size))
+    for i in range(zv.size):
+        psf_rz_interp = scipy.interpolate.interp1d(rv, PSF_rz[i,:])
+        PSF_xyz[i,:,:] = psf_rz_interp(r_pixel.ravel()).reshape(xy_size, xy_size)
+
+    return PSF_xyz
+
+        
 def gLZRFocalScan(mp, rv, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = None):
     """
     Calculate radial G-L at specified radius and z values. This is models the PSF
