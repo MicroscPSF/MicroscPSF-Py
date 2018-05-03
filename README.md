@@ -13,7 +13,7 @@ $ python setup.py install
 
 ### Usage ###
 
-Please see [this](https://github.com/MicroscPSF/MicroscPSF-Py/blob/master/examples.ipynb) [Jupyter](http://jupyter.org/) notebook.
+Please see the [examples.ipynb](https://github.com/MicroscPSF/MicroscPSF-Py/blob/master/examples.ipynb) Jupyter notebook.
 
 ### Acknowledgements ###
 
