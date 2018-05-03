@@ -17,7 +17,7 @@ References:
 
 2. Gibson, S. & Lanni, F. "Experimental test of an analytical model of
    aberration in an oil-immersion objective lens used in three-dimensional
-   light microscopy", J. Opt. Soc. Am. A 9, 154–166 (1992), [Originally 
+   light microscopy", J. Opt. Soc. Am. A 9, 154-166 (1992), [Originally
    published in J. Opt. Soc. Am. A 8, 1601-1613 (1991)].
 
 3. Kirshner et al, "3-D PSF fitting for fluorescence microscopy: implementation 
