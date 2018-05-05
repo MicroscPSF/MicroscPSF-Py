@@ -3,6 +3,8 @@
 This is a Python implementation of the fast microscope PSF generation tool (using the Gibson-Lanni model).
 Technical details can be found [here](http://www.ee.cuhk.edu.hk/~jzli/MicroscPSF/).
 
+[![Linux Build Status](https://travis-ci.org/MicroscPSF/MicroscPSF-Py.svg?branch=master)](https://travis-ci.org/MicroscPSF/MicroscPSF-Py)
+
 ### Install ###
 
 ```
