@@ -3,18 +3,19 @@
 #
 from setuptools import setup, find_packages
 
-version = "0.0"
-description = "Gibson-Lanni PSF calculation code."
-long_description = ""
+# Get the long description from the relevant file
+with open('README.md') as f:
+    readme = f.read()
 
 setup(
-    name='storm_analysis',
-    version=version,
-    description=description,
-    long_description=long_description,
-    author='?',
-    author_email='?',
-    url='https://github.com/?',
+    name='MicroscPSF-Py',
+    version=0.1,
+    description='Gibson-Lanni PSF calculation code.',
+    long_description=readme,
+    long_description_content_type='text/markdown',
+    author='Kyle Douglass, Hazen Babcock',
+    author_email='hbabcock@mac.com',
+    url='https://github.com/MicroscPSF/MicroscPSF-Py',
 
     zip_safe=False,
     packages=find_packages(),
@@ -27,13 +28,13 @@ setup(
 
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
-    
-    license="",  
+
+    license='MIT',
     keywords='PSF,microscopy',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: ?',
+        'License :: OSI Approved :: MIT License',
         "Programming Language :: C",
         "Programming Language :: Python :: 2",
         'Programming Language :: Python :: 2.7',
