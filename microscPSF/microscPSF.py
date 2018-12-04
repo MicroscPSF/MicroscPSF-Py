@@ -84,6 +84,36 @@ def deltaFocus(mp, zd):
     return a*a*(mp["zd0"] - zd)/(2.0*mp["zd0"]*zd)
 
 
+def gLXYZCameraScan(mp, dxy, xy_size, zd, normalize = True, pz = 0.0, wvl = 0.6, zv = 0.0):
+    """
+    NOTE: Does not work!
+
+    Calculate 3D G-L PSF. This is models the PSF you would measure by scanning the 
+    camera position (changing the microscope tube length).
+
+    This will return a numpy array with of size (zv.size, xy_size, xy_size). Note that z
+    is the zeroth dimension of the PSF.
+
+    mp - The microscope parameters dictionary.
+    dxy - Step size in the XY plane.
+    xy_size - Number of pixels in X/Y.
+    zd - A numpy array containing the camera positions in microns.
+
+    normalize - Normalize the PSF to unit height.
+    pz - Particle z position above the coverslip (positive values only).
+    wvl - Light wavelength in microns.
+    zv - The (relative) z offset value of the coverslip (negative is closer to the objective).
+    """
+    # Calculate rv vector, this is 2x up-sampled.
+    rv = calcRv(dxy, xy_size)
+    
+    # Calculate radial/Z PSF.
+    PSF_rz = gLZRCameraScan(mp, rv, zd, normalize = normalize, pz = pz, wvl = wvl, zv = zv)
+
+    # Create XYZ PSF by interpolation.
+    return psfRZToPSFXYZ(dxy, xy_size, rv, PSF_rz)
+
+
 def gLXYZFocalScan(mp, dxy, xy_size, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = None):
     """
     Calculate 3D G-L PSF. This is models the PSF you would measure by scanning the microscopes 
@@ -185,8 +215,6 @@ def gLZRScan(mp, pz, rv, zd, zv, normalize = True, wvl = 0.6):
 
     rv = rv*mp["M"]
     b = k * a * rv.reshape(-1, 1)/zd
-    
-    #b = 2 * numpy.pi * rv.reshape(-1, 1) * mp["NA"] / wvl
 
     # Convenience functions for J0 and J1 Bessel functions
     J0 = lambda x: scipy.special.jv(0, x)
@@ -210,6 +238,8 @@ def gLZRScan(mp, pz, rv, zd, zv, normalize = True, wvl = 0.6):
 
 def gLZRCameraScan(mp, rv, zd, normalize = True, pz = 0.0, wvl = 0.6, zv = 0.0):
     """
+    NOTE: Does not work!
+
     Calculate radial G-L at specified radius and z values. This is models the PSF
     you would measure by scanning the camera position (changing the microscope
     tube length).
@@ -326,6 +356,7 @@ def psfRZToPSFXYZ(dxy, xy_size, rv, PSF_rz):
         PSF_xyz[i,:,:] = psf_rz_interp(r_pixel.ravel()).reshape(xy_size, xy_size)
 
     return PSF_xyz
+
 
 def slowGL(mp, max_rho, rv, zv, pz, wvl, zd):
     """
