@@ -49,9 +49,25 @@ def test_03():
 
     assert (numpy.allclose(fast_rz, slow_rz, atol = 1.0e-4, rtol = 1.0e-4))
 
+
+def test_04():
+    """
+    Particle scan.
+    """
+    mp = msPSF.m_params
+    rv = numpy.arange(0.0, 1.01, 0.1)
+    pv = numpy.arange(0.0, 2.01, 0.2)
+
+    fast_rz = msPSF.gLZRParticleScan(mp, rv, pv)
+    slow_rz = msPSF.gLZRParticleScanSlow(mp, rv, pv)
+
+    assert (numpy.allclose(fast_rz, slow_rz))
+
     
 if (__name__ == "__main__"):
-    test_01()
-    test_02()
-    test_03()
+#    test_01()
+#    test_02()
+#    test_03()
+    test_04()
+
     

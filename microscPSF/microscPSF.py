@@ -404,6 +404,7 @@ def gLZRFocalScanSlow(mp, rv, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = No
     mp - The microscope parameters dictionary.
     rv - A numpy array containing the radius values.
     zv - A numpy array containing the (relative) z offset values of the coverslip (negative is closer to the objective).
+
     normalize - Normalize the PSF to unit height.
     pz - Particle z position above the coverslip (positive values only).
     wvl - Light wavelength in microns.
@@ -419,6 +420,38 @@ def gLZRFocalScanSlow(mp, rv, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = No
     for i in range(zv.size):
         for j in range(rv.size):
             psf_rz[i,j] = slowGL(mp, max_rho, rv[j], zv[i], pz, wvl, zd)
+
+    if normalize:
+        psf_rz = psf_rz/numpy.max(psf_rz)
+        
+    return psf_rz
+
+
+def gLZRParticleScanSlow(mp, rv, pz, normalize = True, wvl = 0.6, zd = None, zv = 0.0):
+    """
+    This is the integration version of gLZRParticleScan.
+
+    mp - The microscope parameters dictionary.
+    rv - A numpy array containing the radius values.
+    pz - A numpy array containing the particle z position above the coverslip (positive values only)
+         in microns.
+
+    normalize - Normalize the PSF to unit height.
+    wvl - Light wavelength in microns.
+    zd - Actual camera position in microns. If not specified the microscope tube length is used.
+    zv - The (relative) z offset value of the coverslip (negative is closer to the objective).
+    """
+    if zd is None:
+        zd = mp["zd0"]
+
+    [scaling_factor, max_rho] = configure(mp, wvl)
+    rho = numpy.linspace(0.0, max_rho, rho_samples)
+
+    psf_rz = numpy.zeros((pz.size, rv.size))
+    for i in range(pz.size):
+        print(i)
+        for j in range(rv.size):
+            psf_rz[i,j] = slowGL(mp, max_rho, rv[j], zv, pz[i], wvl, zd)
 
     if normalize:
         psf_rz = psf_rz/numpy.max(psf_rz)
