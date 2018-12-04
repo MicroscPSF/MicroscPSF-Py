@@ -449,7 +449,6 @@ def gLZRParticleScanSlow(mp, rv, pz, normalize = True, wvl = 0.6, zd = None, zv 
 
     psf_rz = numpy.zeros((pz.size, rv.size))
     for i in range(pz.size):
-        print(i)
         for j in range(rv.size):
             psf_rz[i,j] = slowGL(mp, max_rho, rv[j], zv, pz[i], wvl, zd)
 
