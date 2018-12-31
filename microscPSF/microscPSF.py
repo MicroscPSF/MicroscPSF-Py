@@ -57,7 +57,7 @@ def calcRv(dxy, xy_size, sampling=2):
     Calculate rv vector, this is 2x up-sampled.
     """
     rv_max = math.sqrt(0.5 * xy_size * xy_size) + 1
-    return dxy * numpy.arange(0, sampling * rv_max) / sampling
+    return numpy.arange(0, rv_max * dxy, dxy / sampling)
     
 
 def configure(mp, wvl):
