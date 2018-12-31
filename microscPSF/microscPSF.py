@@ -52,12 +52,12 @@ m_params = {"M" : 100.0,             # magnification
             "zd0" : 200.0 * 1.0e+3}  # microscope tube length (in microns).
 
 
-def calcRv(dxy, xy_size):
+def calcRv(dxy, xy_size, sampling=2):
     """
     Calculate rv vector, this is 2x up-sampled.
     """
-    rv_max = dxy * math.sqrt(0.5 * xy_size * xy_size) + dxy
-    return numpy.arange(0.0, rv_max + 0.5*dxy, dxy)
+    rv_max = math.sqrt(0.5 * xy_size * xy_size) + 1
+    return dxy * numpy.arange(0, sampling * rv_max) / sampling
     
 
 def configure(mp, wvl):
