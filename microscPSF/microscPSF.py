@@ -211,7 +211,7 @@ def gLZRScan(mp, pz, rv, zd, zv, normalize = True, wvl = 0.6):
     # solution to the complex coefficients of the Fourier-Bessel expansion.
     # Shape of C is (number of basis functions by number of z samples).
     # Note the matrix transposes to get the dimensions correct.    
-    C, residuals, _, _ = numpy.linalg.lstsq(J.T, phase.T)
+    C, residuals, _, _ = numpy.linalg.lstsq(J.T, phase.T, rcond=None)
 
     rv = rv*mp["M"]
     b = k * a * rv.reshape(-1, 1)/zd
