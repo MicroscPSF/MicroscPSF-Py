@@ -12,7 +12,7 @@ http://kmdouglass.github.io/posts/implementing-a-fast-gibson-lanni-psf-solver-in
 
 References:
 
-1. Li et al, "Fast and accurate three-dimensional point spread function computation 
+1. Li et al, "Fast and accurate three-dimensional point spread function computation
    for fluorescence microscopy", JOSA, 2017.
 
 2. Gibson, S. & Lanni, F. "Experimental test of an analytical model of
@@ -20,7 +20,7 @@ References:
    light microscopy", J. Opt. Soc. Am. A 9, 154-166 (1992), [Originally
    published in J. Opt. Soc. Am. A 8, 1601-1613 (1991)].
 
-3. Kirshner et al, "3-D PSF fitting for fluorescence microscopy: implementation 
+3. Kirshner et al, "3-D PSF fitting for fluorescence microscopy: implementation
    and localization application", Journal of Microscopy, 2012.
 
 Hazen 04/18
@@ -37,7 +37,7 @@ import scipy.special
 # Internal constants.
 num_basis = 100     # Number of rescaled Bessels that approximate the phase function.
 rho_samples = 1000  # Number of pupil sample along the radial direction.
-               
+
 # Microscope parameters.
 m_params = {"M" : 100.0,             # magnification
             "NA" : 1.4,              # numerical aperture
@@ -52,13 +52,13 @@ m_params = {"M" : 100.0,             # magnification
             "zd0" : 200.0 * 1.0e+3}  # microscope tube length (in microns).
 
 
-def calcRv(dxy, xy_size):
+def calcRv(dxy, xy_size, sampling=2):
     """
     Calculate rv vector, this is 2x up-sampled.
     """
-    rv_max = dxy * math.sqrt(0.5 * xy_size * xy_size) + dxy
-    return numpy.arange(0.0, rv_max + 0.5*dxy, dxy)
-    
+    rv_max = math.sqrt(0.5 * xy_size * xy_size) + 1
+    return numpy.arange(0, rv_max * dxy, dxy / sampling)
+
 
 def configure(mp, wvl):
     # Scaling factors for the Fourier-Bessel series expansion
@@ -88,7 +88,7 @@ def gLXYZCameraScan(mp, dxy, xy_size, zd, normalize = True, pz = 0.0, wvl = 0.6,
     """
     NOTE: Does not work!
 
-    Calculate 3D G-L PSF. This is models the PSF you would measure by scanning the 
+    Calculate 3D G-L PSF. This is models the PSF you would measure by scanning the
     camera position (changing the microscope tube length).
 
     This will return a numpy array with of size (zv.size, xy_size, xy_size). Note that z
@@ -106,7 +106,7 @@ def gLXYZCameraScan(mp, dxy, xy_size, zd, normalize = True, pz = 0.0, wvl = 0.6,
     """
     # Calculate rv vector, this is 2x up-sampled.
     rv = calcRv(dxy, xy_size)
-    
+
     # Calculate radial/Z PSF.
     PSF_rz = gLZRCameraScan(mp, rv, zd, normalize = normalize, pz = pz, wvl = wvl, zv = zv)
 
@@ -116,7 +116,7 @@ def gLXYZCameraScan(mp, dxy, xy_size, zd, normalize = True, pz = 0.0, wvl = 0.6,
 
 def gLXYZFocalScan(mp, dxy, xy_size, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = None):
     """
-    Calculate 3D G-L PSF. This is models the PSF you would measure by scanning the microscopes 
+    Calculate 3D G-L PSF. This is models the PSF you would measure by scanning the microscopes
     focus.
 
     This will return a numpy array with of size (zv.size, xy_size, xy_size). Note that z
@@ -134,7 +134,7 @@ def gLXYZFocalScan(mp, dxy, xy_size, zv, normalize = True, pz = 0.0, wvl = 0.6, 
     """
     # Calculate rv vector, this is 2x up-sampled.
     rv = calcRv(dxy, xy_size)
-    
+
     # Calculate radial/Z PSF.
     PSF_rz = gLZRFocalScan(mp, rv, zv, normalize = normalize, pz = pz, wvl = wvl, zd = zd)
 
@@ -163,7 +163,7 @@ def gLXYZParticleScan(mp, dxy, xy_size, pz, normalize = True, wvl = 0.6, zd = No
     """
     # Calculate rv vector, this is 2x up-sampled.
     rv = calcRv(dxy, xy_size)
-    
+
     # Calculate radial/Z PSF.
     PSF_rz = gLZRParticleScan(mp, rv, pz, normalize = normalize, wvl = wvl, zd = zd, zv = zv)
 
@@ -210,7 +210,7 @@ def gLZRScan(mp, pz, rv, zd, zv, normalize = True, wvl = 0.6):
     # Compute the approximation to the sampled pupil phase by finding the least squares
     # solution to the complex coefficients of the Fourier-Bessel expansion.
     # Shape of C is (number of basis functions by number of z samples).
-    # Note the matrix transposes to get the dimensions correct.    
+    # Note the matrix transposes to get the dimensions correct.
     C, residuals, _, _ = numpy.linalg.lstsq(J.T, phase.T)
 
     rv = rv*mp["M"]
@@ -219,7 +219,7 @@ def gLZRScan(mp, pz, rv, zd, zv, normalize = True, wvl = 0.6):
     # Convenience functions for J0 and J1 Bessel functions
     J0 = lambda x: scipy.special.jv(0, x)
     J1 = lambda x: scipy.special.jv(1, x)
-    
+
     # See equation 5 in Li, Xue, and Blu
     denom = scaling_factor * scaling_factor - b * b
     R = (scaling_factor * J1(scaling_factor * max_rho) * J0(b * max_rho) * max_rho - b * J0(scaling_factor * max_rho) * J1(b * max_rho) * max_rho)
@@ -231,7 +231,7 @@ def gLZRScan(mp, pz, rv, zd, zv, normalize = True, wvl = 0.6):
 
     # Normalize to the maximum value
     if normalize:
-        PSF_rz /= numpy.max(PSF_rz)    
+        PSF_rz /= numpy.max(PSF_rz)
 
     return PSF_rz
 
@@ -266,7 +266,7 @@ def gLZRFocalScan(mp, rv, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = None):
 
     mp - The microscope parameters dictionary.
     rv - A numpy array containing the radius values.
-    zv - A numpy array containing the (relative) z offset values of the coverslip (negative is 
+    zv - A numpy array containing the (relative) z offset values of the coverslip (negative is
          closer to the objective) in microns.
 
     normalize - Normalize the PSF to unit height.
@@ -303,7 +303,7 @@ def gLZRParticleScan(mp, rv, pz, normalize = True, wvl = 0.6, zd = None, zv = 0.
 
     zd = numpy.array([zd])
     zv = numpy.array([zv])
-    
+
     return gLZRScan(mp, pz, rv, zd, zv, normalize = normalize, wvl = wvl)
 
 
@@ -328,15 +328,15 @@ def OPD(mp, rho, ti, pz, wvl, zd):
     tg = mp["tg"]
     tg0 = mp["tg0"]
     zd0 = mp["zd0"]
-        
+
     a = NA * zd0 / mp["M"]  # Aperture radius at the back focal plane.
     k = 2.0 * numpy.pi/wvl  # Wave number of emitted light.
-    
+
     OPDs = pz * numpy.sqrt(ns * ns - NA * NA * rho * rho) # OPD in the sample.
     OPDi = ti * numpy.sqrt(ni * ni - NA * NA * rho * rho) - ti0 * numpy.sqrt(ni0 * ni0 - NA * NA * rho * rho) # OPD in the immersion medium.
     OPDg = tg * numpy.sqrt(ng * ng - NA * NA * rho * rho) - tg0 * numpy.sqrt(ng0 * ng0 - NA * NA * rho * rho) # OPD in the coverslip.
     OPDt = a * a * (zd0 - zd) * rho * rho / (2.0 * zd0 * zd) # OPD in camera position.
-    
+
     return k * (OPDs + OPDi + OPDg + OPDt)
 
 
@@ -377,13 +377,13 @@ def slowGL(mp, max_rho, rv, zv, pz, wvl, zd):
     ti = zv + mp["ti0"]
 
     rv = rv*mp["M"]
-    
+
     def integral_fn_imag(rho):
         t1 = k * a * rho * rv/zd
         t2 = scipy.special.jv(0, t1)
         t3 = t2*cmath.exp(1j*OPD(mp, rho, ti, pz, wvl, zd))*rho
         return t3.imag
-    
+
     def integral_fn_real(rho):
         t1 = k * a * rho * rv/zd
         t2 = scipy.special.jv(0, t1)
@@ -395,7 +395,7 @@ def slowGL(mp, max_rho, rv, zv, pz, wvl, zd):
 
     t1 = k * a * a / (zd * zd)
     return t1 * (int_r * int_r + int_i * int_i)
-    
+
 
 def gLZRFocalScanSlow(mp, rv, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = None):
     """
@@ -423,7 +423,7 @@ def gLZRFocalScanSlow(mp, rv, zv, normalize = True, pz = 0.0, wvl = 0.6, zd = No
 
     if normalize:
         psf_rz = psf_rz/numpy.max(psf_rz)
-        
+
     return psf_rz
 
 
@@ -454,5 +454,5 @@ def gLZRParticleScanSlow(mp, rv, pz, normalize = True, wvl = 0.6, zd = None, zv 
 
     if normalize:
         psf_rz = psf_rz/numpy.max(psf_rz)
-        
+
     return psf_rz
