@@ -9,7 +9,7 @@ with open('README.md') as f:
 
 setup(
     name='MicroscPSF-Py',
-    version=0.1,
+    version=0.2,
     description='Gibson-Lanni PSF calculation code.',
     long_description=readme,
     long_description_content_type='text/markdown',
