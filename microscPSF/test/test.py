@@ -31,10 +31,10 @@ def test_02():
 
     fast_rz = msPSF.gLZRFocalScan(mp, rv, zv, pz = 0.5)
     slow_rz = msPSF.gLZRFocalScanSlow(mp, rv, zv, pz = 0.5)
-    
+
     assert (numpy.allclose(fast_rz, slow_rz, atol = 1.0e-4, rtol = 1.0e-4))
 
-    
+
 def test_03():
     """
     Detector offset.
@@ -60,7 +60,7 @@ def test_04():
 
     fast_rz = msPSF.gLZRParticleScan(mp, rv, pv)
     slow_rz = msPSF.gLZRParticleScanSlow(mp, rv, pv)
-    
+
     assert (numpy.allclose(fast_rz, slow_rz, rtol = 1.0e-4, atol = 1.0e-4))
 
 
@@ -74,10 +74,10 @@ def test_05():
 
     fast_rz = msPSF.gLZRParticleScan(mp, rv, pv, zv = -2.0)
     slow_rz = msPSF.gLZRParticleScanSlow(mp, rv, pv, zv = -2.0)
-    
+
     assert (numpy.allclose(fast_rz, slow_rz, rtol = 1.0e-3, atol = 1.0e-3))
-    
-    
+
+
 if (__name__ == "__main__"):
     test_01()
     test_02()
