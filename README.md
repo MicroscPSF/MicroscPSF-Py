@@ -1,9 +1,8 @@
 ## MicroscPSF-Py ##
 
 This is a Python implementation of the fast microscope PSF generation tool (using the Gibson-Lanni model).
-Technical details can be found [here](http://www.ee.cuhk.edu.hk/~jzli/MicroscPSF/).
+Technical details can be found [here](http://jizhou.li/project/microsc_psf).
 
-[![Linux Build Status](https://travis-ci.org/MicroscPSF/MicroscPSF-Py.svg?branch=master)](https://travis-ci.org/MicroscPSF/MicroscPSF-Py)
 [![PyPI version](https://badge.fury.io/py/MicroscPSF-Py.svg)](https://badge.fury.io/py/MicroscPSF-Py)
 
 ### Install ###
