@@ -1,0 +1,35 @@
+[build-system]
+requires = ['setuptools>=61.0', 'numpy']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'MicroscPSF-Py'
+version = '0.2'
+dependencies = [
+  'numpy',
+  'scipy'
+]
+requires-python = '>=3.10'
+authors = [{name = 'Kyle Douglass'}, {name = 'Hazen Babcock', email = 'hbabcock@mac.com'}]
+maintainers = []
+description = 'Gibson-Lanni PSF calculation code.'
+readme = 'README.md'
+keywords = ['PSF', 'microscopy']
+classifiers = [
+  'Development Status :: 3 - Alpha',
+  'Intended Audience :: Developers',
+  'License :: OSI Approved :: MIT License'
+]
+
+[tool.pytest]
+minversion = '9.0'
+addopts = ['-ra', '-q']
+testpaths = [
+    'microscPSF/test'
+]
+
+[project.optional-dependencies]
+test = [
+    'pytest',
+    'pytest-cov',
+]
