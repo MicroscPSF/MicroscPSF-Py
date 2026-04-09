@@ -18,7 +18,7 @@ $ python -m pip install MicroscPSF-Py
 ```
 $ git clone https://github.com/MicroscPSF/MicroscPSF-Py.git
 $ cd MicroscPSF-Py
-$ python setup.py install
+$ python -m pip install .
 ```
 
 ### Usage ###
